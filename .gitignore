@@ -12,3 +12,4 @@ dist/
 *.key
 *.csr
 *.cert
+*.crt
