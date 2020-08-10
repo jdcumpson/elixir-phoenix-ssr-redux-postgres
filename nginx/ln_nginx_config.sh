@@ -1,0 +1,1 @@
+ln -s $PWD/9900-quickstart.dev.conf /usr/local/etc/nginx/servers/
