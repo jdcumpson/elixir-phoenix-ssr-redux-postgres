@@ -1,4 +1,3 @@
-import 'router.js'
 import http from 'http'
 import fs from 'fs'
 // import {Context as ResponsiveContext} from 'react-responsive'
@@ -12,8 +11,9 @@ import thunkMiddleware from 'redux-thunk'
 import {ServerStyleSheets} from '@material-ui/core/styles'
 import StyleContext from 'isomorphic-style-loader/StyleContext'
 
-import Application from 'lib/application'
-import reducer from 'reducer'
+import 'domains/application/router.js'
+import Application from 'domains/application'
+import reducer from 'domains/application/reducer'
 
 export const renderString = (path, state, actions) => {
   const compose = getCompose()

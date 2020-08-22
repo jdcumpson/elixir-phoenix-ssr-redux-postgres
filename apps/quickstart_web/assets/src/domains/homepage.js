@@ -117,7 +117,7 @@ export const FeedItem = ({data: item}) => {
   )
 }
 
-const IndexPage = () => {
+const IndexPage = function IndexPage(props) {
   const classes = useStyles()
   const dispatch = useDispatch()
   const search = useSelector((state) => state.search)
@@ -125,7 +125,6 @@ const IndexPage = () => {
   const {items, fetching, columnWidth} = useSelector((state) => state.homepage)
   React.useEffect(() => {}, [search])
 
-  console.info(fetchingItem)
   if (fetchingItem) {
     return <div>fetching!</div>
   }

@@ -1,5 +1,3 @@
-import 'react-hot-loader'
-
 import 'domains/application/router.js'
 
 import {createStore, applyMiddleware} from 'redux'
@@ -12,7 +10,7 @@ import Url from 'url-parse'
 import StyleContext from 'isomorphic-style-loader/StyleContext'
 
 import history from 'lib/history'
-import Application from 'domains/application'
+import Application from './domains/application'
 import {navigatePage} from 'domains/page/actions'
 import reducer from 'domains/application/reducer'
 
@@ -49,18 +47,24 @@ const start = () => {
     }),
   )
 
-  window.store = store
+  const elem = document.getElementById('root')
+  const hydrate = params.hydrate || process.env.SSR_ENABLED
+  const render = hydrate ? ReactDOM.hydrate : ReactDOM.render
 
-  if (process.env.NODE_ENV === 'development' && module.hot) {
+  if (module.hot) {
+    module.hot.accept((...args) => console.error(args))
+    module.hot.accept('domains/application/router.js', () => {
+      // todo re-route
+    })
     module.hot.accept('./domains/application/reducer', () => {
       const newRootReducer = require('./domains/application/reducer').default
       store.replaceReducer(newRootReducer)
     })
   }
 
-  const elem = document.getElementById('root')
-  const hydrate = params.hydrate || process.env.SSR_ENABLED
-  const render = hydrate ? ReactDOM.hydrate : ReactDOM.render
+  if (process.env.NODE_ENV === 'development') {
+    window.store = store
+  }
 
   render(
     <Provider store={store}>

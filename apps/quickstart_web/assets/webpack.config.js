@@ -8,6 +8,9 @@ const webpack = require('webpack')
 
 const env = process.env.RELEASE_ENV || 'dev'
 
+// add react-refresh
+babelConfig.plugins.push('react-refresh/babel')
+
 const config = {
   // allow resolution of imports without relative paths
   // I like this for domain scoping my app without boilerplate
@@ -37,7 +40,7 @@ const config = {
   // release environments
   output: {
     path: path.resolve(__dirname, './dist/' + env + '/'),
-    publicPath: process.env.PUBLIC_PATH || '/static/',
+    publicPath: process.env.PUBLIC_PATH || '/hmr/',
     pathinfo: false,
   },
   // default to source map debugging tools
@@ -62,6 +65,7 @@ const config = {
       {
         test: /\.[s]?css$/,
         use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
+        // use: ['css-loader', 'sass-loader'],
       },
     ],
   },

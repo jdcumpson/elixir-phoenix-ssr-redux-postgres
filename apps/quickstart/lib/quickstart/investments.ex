@@ -1,4 +1,7 @@
 defmodule Quickstart.Investments do
+  use Agent
+  require Logger
+
   # http://people.math.sfu.ca/~cbm/aands/page_932.htm
   @probabilty 0.2316419
   @b1 0.319381530
@@ -7,6 +10,32 @@ defmodule Quickstart.Investments do
   @b4 -1.821255978
   @b5 1.330274429
   @standard_normal_normalizing_constant 1 / :math.sqrt(2 * :math.pi())
+  @ets_cache_table :prediction_cache
+
+  def start_link(_opts \\ []) do
+    fp = "prediction_cache.tab"
+
+    # PersistentEts doesn't like empty files
+    if File.exists?(fp) and String.length(File.read!(fp)) == 0 do
+      File.rm!(fp)
+      Logger.warn("Removed stale persisted ets file")
+    end
+
+    PersistentEts.new(
+      @ets_cache_table,
+      fp,
+      [:named_table, :set, :public, persist_every: 30_000]
+    )
+
+    Logger.info("#{:ets.tab2list(@ets_cache_table) |> length()} predictions are cached")
+
+    Agent.start_link(fn -> %{} end, name: __MODULE__)
+  end
+
+  def terminate(_reason, _state) do
+    PersistentEts.flush(@ets_cache_table)
+  end
+
   def pdf(x) do
     @standard_normal_normalizing_constant * :math.exp(-0.5 * :math.pow(x, 2))
   end
@@ -44,19 +73,17 @@ defmodule Quickstart.Investments do
   Journal of Finance, Vol. 33, No. 1, (March 1978), pp. 177-186.
   """
   def margrabes_short(s1, s2, t, sigma, q1, q2, scale \\ 1) do
+    sigma = if sigma == 0, do: 0.000001, else: sigma
     sigma_sqrt_t = sigma * :math.sqrt(t)
     log_simple_moneyness = :math.log(s1 / s2) + (q2 - q1) * t
 
-    d1 =
-      if log_simple_moneyness == 0 and sigma_sqrt_t == 0,
-        do: :infinity,
-        else: (log_simple_moneyness + :math.pow(sigma, 2) / 2 * t) / sigma_sqrt_t
-
+    d1 = (log_simple_moneyness + :math.pow(sigma, 2) / 2 * t) / sigma_sqrt_t
     d2 = d1 - sigma_sqrt_t
     cumulative_dist_d1 = cdf(d1)
     cumulative_dist_d2 = cdf(d2)
     discount_factor_1 = discount_factor(q1, t)
     discount_factor_2 = discount_factor(q2, t)
+    pdf_d1 = pdf(d1)
 
     %{
       call: %{
@@ -65,7 +92,12 @@ defmodule Quickstart.Investments do
             (discount_factor_1 * s1 * cumulative_dist_d1 -
                discount_factor_2 * s2 * cumulative_dist_d2),
         delta: scale * discount_factor_1 * cumulative_dist_d1,
-        gamma: scale * discount_factor_1 * pdf(d1) / sigma_sqrt_t / s1,
+        gamma: scale * discount_factor_1 * pdf_d1 / sigma_sqrt_t / s1,
+        theta:
+          1 / 365 *
+            (-1 * discount_factor_1 * pdf_d1 * sigma * s1 / :math.sqrt(t) / 2 -
+               q2 * s2 * discount_factor_2 * cumulative_dist_d2 +
+               q1 * s1 * discount_factor_1 * cumulative_dist_d1),
         moneyness: log_simple_moneyness / sigma_sqrt_t,
         log_moneyness: log_simple_moneyness,
         scale: scale
@@ -76,7 +108,12 @@ defmodule Quickstart.Investments do
             (discount_factor_2 * s2 * (1 - cumulative_dist_d2) -
                discount_factor_1 * s1 * (1 - cumulative_dist_d1)),
         delta: scale * discount_factor_1 * (1 - cumulative_dist_d1),
-        gamma: scale * discount_factor_1 * pdf(d1) / sigma_sqrt_t / s1,
+        gamma: scale * discount_factor_1 * pdf_d1 / sigma_sqrt_t / s1,
+        theta:
+          1 / 365 *
+            (-1 * discount_factor_1 * pdf_d1 * sigma * s1 / :math.sqrt(t) / 2 +
+               q2 * s2 * discount_factor_2 * cdf(-d2) +
+               q1 * s1 * discount_factor_1 * cdf(-d1)),
         moneyness: -1 * log_simple_moneyness / sigma_sqrt_t,
         log_moneyness: -1 * log_simple_moneyness,
         scale: scale
@@ -101,6 +138,26 @@ defmodule Quickstart.Investments do
   q - dividend rate of the asset
   """
   def black_scholes(s, k, t, sigma, q, r, scale \\ 1.0) do
-    margrabes_short(s, k, t, sigma, q, r, scale)
+    cache_key = "#{date_15m()}-#{s}-#{k}-#{t}-#{sigma}-#{q}-#{r}-#{scale}"
+
+    case :ets.lookup(@ets_cache_table, cache_key) do
+      [{_key, val}] ->
+        # Logger.info("Returning cached values for #{cache_key}")
+        val
+
+      _ ->
+        val = margrabes_short(s, k, t, sigma, q, r, scale)
+        :ets.insert(@ets_cache_table, {cache_key, val})
+        val
+    end
+  end
+
+  defp date_15m do
+    now = NaiveDateTime.utc_now()
+    mins = floor(now.minute / 15) * 15
+
+    NaiveDateTime.new(now.year, now.month, now.day, now.hour, mins, 0)
+    |> elem(1)
+    |> NaiveDateTime.to_iso8601()
   end
 end

@@ -10,9 +10,12 @@ defmodule Quickstart.Application do
       # Start the Ecto repository
       Quickstart.Repo,
       # Start the PubSub system
-      {Phoenix.PubSub, name: Quickstart.PubSub}
+      {Phoenix.PubSub, name: Quickstart.PubSub},
       # Start a worker by calling: Quickstart.Worker.start_link(arg)
       # {Quickstart.Worker, arg}
+      Quickstart.Tickers,
+      Quickstart.Yahoo,
+      Quickstart.Investments
     ]
 
     Supervisor.start_link(children, strategy: :one_for_one, name: Quickstart.Supervisor)

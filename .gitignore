@@ -13,3 +13,5 @@ dist/
 *.csr
 *.cert
 *.crt
+*.txt
+*.tab

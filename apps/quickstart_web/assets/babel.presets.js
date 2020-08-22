@@ -14,7 +14,7 @@ module.exports = {
       ],
       ['@babel/preset-react', {development: false}],
     ],
-    plugins: ['transform-class-properties', 'react-hot-loader/babel'],
+    plugins: ['transform-class-properties', '@babel/plugin-transform-runtime'],
   },
   CSS_SCOPE_NAME,
 }

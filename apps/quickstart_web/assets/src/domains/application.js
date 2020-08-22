@@ -3,11 +3,10 @@ import {useSelector} from 'react-redux'
 import withStyles from 'isomorphic-style-loader/withStyles'
 import styles from 'gestalt/dist/gestalt.css'
 import CssBaseline from '@material-ui/core/CssBaseline'
-import {hot} from 'react-hot-loader/root'
 
 import {getRoute} from 'lib/route'
 
-const Application = (props) => {
+function Application(props) {
   // Remove server-side rendered CSS once this is rendered on the client
   // this will replace the server-side rendered styles with client-side
   // rendered styles. In the best case scenario, this will have 0 user
@@ -36,4 +35,4 @@ const Application = (props) => {
   )
 }
 
-export default hot(withStyles(styles)(Application))
+export default withStyles(styles)(Application)

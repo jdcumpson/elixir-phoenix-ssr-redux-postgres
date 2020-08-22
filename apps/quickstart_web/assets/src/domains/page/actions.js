@@ -27,21 +27,25 @@ export const navigateTo = (
       .value()
 
     const newUrl = `${urlObj.pathname}${params ? `?${params}` : ''}`
+    const oldUrl = `${history.location.pathname}${history.location.search}`
 
-    if (history.location.href === newUrl) {
+    if (oldUrl === newUrl) {
       if (scrollToTop) {
         window.scrollTo(0, 0)
       }
       return
     }
 
-    window.dispatchEvent(
-      new CustomEvent('navigate', {
-        to: newUrl,
-      }),
-    )
+    // window.dispatchEvent(
+    //   new CustomEvent('navigate', {
+    //     to: newUrl,
+    //   }),
+    // )
 
-    history.push(newUrl)
+    history.push({
+      pathname: urlObj.pathname,
+      search: params ? `?${params}` : '',
+    })
 
     if (scrollToTop) {
       window.scrollTo(0, 0)

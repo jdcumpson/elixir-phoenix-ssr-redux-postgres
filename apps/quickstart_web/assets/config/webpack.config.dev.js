@@ -4,6 +4,7 @@ const ManifestPlugin = require('webpack-manifest-plugin')
 const MakeDirPlugin = require('make-dir-webpack-plugin')
 const {CleanWebpackPlugin} = require('clean-webpack-plugin')
 var nodeExternals = require('webpack-node-externals')
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin')
 
 module.exports = (config) => {
   const rules = config.module.rules.slice(0)
@@ -12,8 +13,15 @@ module.exports = (config) => {
   const clientConfig = {
     ...config,
     devServer: {
+      hotOnly: true,
+      inline: true,
+      disableHostCheck: true,
       public: 'quickstart.dev:9900',
+      allowedHosts: ['quickstart.dev:9900'],
       publicPath: '/hmr/',
+      liveReload: false,
+      overlay: true,
+      port: 9905,
     },
     devtool: 'cheap-module-eval-source-map',
     output: {
@@ -26,12 +34,12 @@ module.exports = (config) => {
     },
     resolve: {
       ...config.resolve,
-      alias: {'react-dom': '@hot-loader/react-dom'},
       unsafeCache: true,
     },
     target: 'web',
     plugins: config.plugins.slice(0).concat([
       new webpack.HotModuleReplacementPlugin(),
+      new webpack.NamedModulesPlugin(),
       new ManifestPlugin({
         fileName: 'app.dev.manifest',
       }),
@@ -39,6 +47,7 @@ module.exports = (config) => {
         'process.env.RUNNING_ON_SERVER': false,
         'process.env.SSR_ENABLED': process.env.SSR_ENABLED || false,
       }),
+      new ReactRefreshWebpackPlugin({forceEnable: true}),
       // TODO: define DLL plugin for speed-up
     ]),
   }
@@ -56,7 +65,6 @@ module.exports = (config) => {
     },
     resolve: {
       ...config.resolve,
-      alias: {'react-dom': '@hot-loader/react-dom'},
       unsafeCache: true,
     },
     target: 'node',
@@ -81,5 +89,6 @@ module.exports = (config) => {
     ]),
   }
 
+  return clientConfig
   return [clientConfig, serverConfig]
 }
