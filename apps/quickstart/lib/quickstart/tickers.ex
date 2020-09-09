@@ -12,11 +12,17 @@ defmodule Quickstart.Tickers do
     {:ok, pid} =
       :inets.start(:ftpc,
         host: "ftp.nasdaqtrader.com" |> String.to_charlist(),
-        mode: :active
+        mode: :passive
       )
 
-    :ftp.user(pid, "anonymous" |> String.to_charlist(), "" |> String.to_charlist())
+    :ftp.user(
+      pid,
+      "anonymous" |> String.to_charlist(),
+      "anonymous" |> String.to_charlist()
+    )
+
     :ftp.cd(pid, "/SymbolDirectory/" |> String.to_charlist())
+
     {:ok, string} = :ftp.recv_bin(pid, "nasdaqtraded.txt" |> String.to_charlist())
 
     state =

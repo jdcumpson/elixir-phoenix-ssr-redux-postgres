@@ -114,6 +114,7 @@ export default (state = DEFAULT_STATE, action) => {
             receivedAt: action.receivedAt,
             fetching: false,
             data: action.data,
+            maxProfit: _.maxBy(_.flatten(action.data), 'profit').profit,
           },
         },
       }

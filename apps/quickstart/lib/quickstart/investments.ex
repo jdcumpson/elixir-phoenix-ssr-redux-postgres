@@ -130,8 +130,8 @@ defmodule Quickstart.Investments do
   end
 
   @doc """
-  s - spot price of option (current market price at some time)
-  k - exercise price (price of the stock when exercised)
+  s - future strike price
+  k - stock price
   t - time to maturity
   sigma - implied volatility of underlying asset
   r - risk-free interest rate (constant between t)
@@ -149,6 +149,112 @@ defmodule Quickstart.Investments do
         val = margrabes_short(s, k, t, sigma, q, r, scale)
         :ets.insert(@ets_cache_table, {cache_key, val})
         val
+    end
+  end
+
+  def implied_volatility(
+        type,
+        premium,
+        option_strike_price,
+        stock_price,
+        t,
+        r,
+        q,
+        high \\ 5.0,
+        low \\ 0.0001,
+        iteration \\ 0
+      ) do
+    diff_sigma = (high + low) / 2
+    result_high = black_scholes(option_strike_price, stock_price, t, high, q, r)
+    result_low = black_scholes(option_strike_price, stock_price, t, low, q, r)
+    result_mid = black_scholes(option_strike_price, stock_price, t, diff_sigma, q, r)
+
+    option_high =
+      case type do
+        "call" -> get_in(result_high, [:call])
+        "put" -> get_in(result_high, [:put])
+        _ -> raise "invalid option type"
+      end
+
+    option_low =
+      case type do
+        "call" -> get_in(result_low, [:call])
+        "put" -> get_in(result_low, [:put])
+        _ -> raise "invalid option type"
+      end
+
+    option_mid =
+      case type do
+        "call" -> get_in(result_mid, [:call])
+        "put" -> get_in(result_mid, [:put])
+        _ -> raise "invalid option type"
+      end
+
+    # IO.puts("--------")
+    # IO.puts("iteration: #{iteration}")
+    # IO.puts("high: #{high}")
+    # IO.puts("low: #{low}")
+    # IO.puts("option_high: #{option_high.price}")
+    # IO.puts("option_low: #{option_low.price}")
+    # IO.puts("option_mid: #{option_mid.price}")
+    # IO.puts("premium: #{premium}")
+    # IO.puts("high - premium: #{option_high.price - premium}")
+    # IO.puts("premium - low: #{premium - option_low.price}")
+    # IO.puts("diff_sigma: #{diff_sigma}")
+
+    cond do
+      iteration > 5 ->
+        options = [
+          {option_high.price, high},
+          {option_low.price, low},
+          {option_mid.price, diff_sigma}
+        ]
+
+        {_lowest_price, lowest_sigma} =
+          Enum.min_by(options, fn {price, _sigma} -> abs(premium - price) end)
+
+        lowest_sigma
+
+      abs(option_high.price - premium) < 0.001 or abs(option_low.price - premium) < 0.001 or
+          abs(option_mid.price - premium) < 0.001 ->
+        options = [
+          {option_high.price, high},
+          {option_low.price, low},
+          {option_mid.price, diff_sigma}
+        ]
+
+        {_lowest_price, lowest_sigma} =
+          Enum.min_by(options, fn {price, _sigma} -> abs(premium - price) end)
+
+        lowest_sigma
+
+      option_mid.price > premium ->
+        implied_volatility(
+          type,
+          premium,
+          stock_price,
+          option_strike_price,
+          t,
+          r,
+          q,
+          diff_sigma,
+          low,
+          iteration + 1
+        )
+
+      option_mid.price < premium ->
+        implied_volatility(
+          type,
+          premium,
+          stock_price,
+          option_strike_price,
+          t,
+          r,
+          q,
+          high,
+          diff_sigma,
+          iteration + 1
+        )
     end
   end
 

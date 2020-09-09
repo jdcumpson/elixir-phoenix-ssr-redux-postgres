@@ -17,6 +17,8 @@ import Skeleton from '@material-ui/lab/Skeleton'
 import {VariableSizeList} from 'react-window'
 import matchSorter from 'match-sorter'
 import moment from 'moment'
+import cx from 'classnames'
+import _ from 'lodash'
 
 import {ListboxComponent} from './options'
 import {
@@ -31,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
     margin: theme.spacing(4),
   },
   option: {
-    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
   },
   formControl: {
     marginTop: theme.spacing(2),
@@ -46,11 +48,20 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(2),
     textAlign: 'center',
   },
+  cellMonth: {
+    '&:nth-child(even)': {
+      background: '#f3f3f3',
+    },
+  },
   tableRoot: {
     padding: theme.spacing(1),
   },
   toolbar: {
     flexGrow: 1,
+    padding: theme.spacing(2),
+  },
+  secondHalf: {
+    marginTop: theme.spacing(2),
   },
 }))
 
@@ -68,21 +79,23 @@ const convolve = ([red1, green1, blue1], [red2, green2, blue2], percent) => {
 
 const rgbify = ([red, green, blue]) => `rgb(${red}, ${green}, ${blue})`
 
-const optionToRgb = (option) => {
+const optionToRgb = (option, maxRisk) => {
   if (option.profit == 0) {
     return null
   }
-  const color1 = option.profit > 0 ? deepGreen : deepRed
-  const color2 = option.profit > 0 ? lightGreen : lightRed
-  return rgbify(
-    convolve(
-      color1,
-      color2,
-      option.profit > 0
-        ? option.cost / option.value
-        : option.value / option.cost,
-    ),
-  )
+
+  const color1 = option.profit > 0 ? deepGreen : lightRed
+  const color2 = option.profit > 0 ? lightGreen : deepRed
+
+  let percent = 0
+  if (option.profit > 0) {
+    percent = 1 - option.profit / maxRisk
+  } else {
+    // percent = 1 - -1 * (option.cost / option.profit)
+    percent = option.profit / -maxRisk
+  }
+
+  return rgbify(convolve(color1, color2, percent))
 }
 
 export default function Option(props) {
@@ -137,10 +150,6 @@ export default function Option(props) {
   }, [symbol])
 
   React.useEffect(() => {
-    dispatch(fetchAllCompanies())
-  })
-
-  React.useEffect(() => {
     if (
       _.get(optionsBySymbol, [symbol, 'receivedAt']) &&
       !option &&
@@ -160,8 +169,8 @@ export default function Option(props) {
         symbol,
         date,
         option.strikePrice,
-        undefined,
-        undefined,
+        36,
+        44,
         customPrice,
         undefined,
         type,
@@ -386,12 +395,12 @@ export default function Option(props) {
           </div>
         </Toolbar>
       </Paper>
-      {predictions.data.length > 0 && (
-        <Paper>
+      {option && predictions.data && predictions.data.length > 0 && (
+        <Paper classes={{root: styles.secondHalf}}>
           <table className={styles.tableRoot}>
             <thead>
               <tr>
-                <th className={styles.cell}></th>
+                <th className={cx(styles.cell, styles.cellMonth)}></th>
                 {_.chain(predictions.data[0])
                   .groupBy((prediction) =>
                     moment(prediction.date).format('YYYY-MMM'),
@@ -400,7 +409,7 @@ export default function Option(props) {
                   .map(([date, predictions]) => (
                     <th
                       key={date}
-                      className={styles.cell}
+                      className={cx(styles.cell, styles.cellMonth)}
                       colSpan={predictions.length}
                     >
                       <div>{moment(date).format('MMM')}</div>
@@ -426,7 +435,14 @@ export default function Option(props) {
                   {row.map((prediction) => (
                     <td
                       className={styles.cell}
-                      style={{backgroundColor: optionToRgb(prediction)}}
+                      style={{
+                        backgroundColor: optionToRgb(
+                          prediction,
+                          prediction.profit > 0
+                            ? predictions.maxProfit
+                            : option.price * 100,
+                        ),
+                      }}
                       key={`${prediction.price}${prediction.date}`}
                       onClick={() => console.info(prediction)}
                     >

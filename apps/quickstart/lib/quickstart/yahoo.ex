@@ -31,15 +31,22 @@ defmodule Quickstart.Yahoo do
   end
 
   # transform - this can go into a schema definition instead!
-  defp transform(%{"expiration" => expiry, "strike" => strike} = yahoo_option, type) do
+  defp transform(%{"expiration" => expiry, "strike" => strike} = yahoo_option, symbol, type) do
     ask = Map.get(yahoo_option, "ask")
     last = Map.get(yahoo_option, "lastPrice")
-    iv = Map.get(yahoo_option, "impliedVolatility", 0)
+    # iv = Map.get(yahoo_option, "impliedVolatility", 0)
     price = if ask > 0, do: ask, else: last
     expiry = expiry |> DateTime.from_unix!() |> DateTime.to_date()
     t = max(Date.diff(expiry, Date.utc_today()), 1)
+    strike = max(1, strike)
+    last = max(1, last)
+    %{strike_price: stock_price} = get_info(symbol)
+
+    iv =
+      Quickstart.Investments.implied_volatility(type, price, stock_price, strike, t / 365, 0, 0)
 
     option = %{
+      symbol: symbol,
       asking_price: ask,
       expiry: expiry,
       strike_price: strike,
@@ -99,7 +106,7 @@ defmodule Quickstart.Yahoo do
               "result" => [
                 %{
                   "expirationDates" => expiration_dates
-                }
+                } = result
               ]
             }
           } ->
@@ -163,8 +170,8 @@ defmodule Quickstart.Yahoo do
                 %{"calls" => calls, "puts" => puts} = options
 
                 %{
-                  calls: Enum.map(calls, fn o -> transform(o, "call") end),
-                  puts: Enum.map(puts, fn o -> transform(o, "put") end)
+                  calls: Enum.map(calls, fn o -> transform(o, symbol, "call") end),
+                  puts: Enum.map(puts, fn o -> transform(o, symbol, "put") end)
                 }
 
               _ ->
