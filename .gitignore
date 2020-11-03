@@ -15,3 +15,4 @@ dist/
 *.crt
 *.txt
 *.tab
+/node_modules

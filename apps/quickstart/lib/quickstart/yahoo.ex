@@ -18,7 +18,14 @@ defmodule Quickstart.Yahoo do
     PersistentEts.new(
       @ets_cache_table,
       fp,
-      [:named_table, :set, :public, persist_every: 30_000]
+      [
+        :named_table,
+        :set,
+        :public,
+        persist_every: 30_000,
+        read_concurrency: true,
+        write_concurrency: false
+      ]
     )
 
     Logger.info("#{:ets.tab2list(@ets_cache_table) |> length()} options are cached")
@@ -68,35 +75,65 @@ defmodule Quickstart.Yahoo do
   end
 
   def get_info(symbol) do
-    url = "#{@base_url}/v8/finance/chart/#{symbol}"
+    cache_key = "#{symbol}-info-#{date_15m()}"
+    url = "#{@base_url}/v8/finance/chart/#{symbol}?interval=1d&range=6mo"
 
-    case HTTPoison.get!(url) do
-      %HTTPoison.Response{status_code: _, body: body} ->
-        case Poison.decode!(body) do
-          %{
-            "chart" => %{
-              "error" => nil,
-              "result" => [
-                %{
-                  "meta" => %{
-                    "regularMarketPrice" => price
-                  }
+    case {@use_cache, :ets.lookup(@ets_cache_table, cache_key)} do
+      {true, [{_key, val}]} ->
+        val
+
+      _ ->
+        case HTTPoison.get!(url) do
+          %HTTPoison.Response{status_code: _, body: body} ->
+            case Poison.decode!(body) do
+              %{
+                "chart" => %{
+                  "error" => nil,
+                  "result" => [
+                    %{
+                      "meta" => %{
+                        "regularMarketPrice" => price
+                      },
+                      "timestamp" => timestamp,
+                      "indicators" => %{
+                        "quote" => [
+                          %{
+                            "open" => open,
+                            "close" => close,
+                            "high" => high,
+                            "low" => low,
+                            "volume" => volume
+                          }
+                        ]
+                      }
+                    }
+                  ]
                 }
-              ]
-            }
-          } ->
-            %{
-              strike_price: price
-            }
+              } ->
+                tochlv =
+                  Enum.zip([timestamp, open, close, high, low, volume])
+                  |> Enum.map(fn {t, o, c, h, l, v} -> %{t: t, o: o, c: c, h: h, l: l, v: v} end)
 
-          _ ->
-            %{}
+                result = %{
+                  strike_price: price,
+                  tochlv: tochlv
+                }
+
+                :ets.insert(@ets_cache_table, {cache_key, result})
+                result
+
+              other ->
+                IO.inspect(other)
+                %{}
+            end
         end
     end
   end
 
   def get_options(symbol, expirations \\ nil, strike_prices \\ nil) do
     url = "#{@base_url}/v7/finance/options/#{symbol}"
+    # TODO: make a better way, to pre-cache info
+    get_info(symbol)
 
     case HTTPoison.get!(url) do
       %HTTPoison.Response{status_code: 200, body: body} ->
@@ -106,7 +143,7 @@ defmodule Quickstart.Yahoo do
               "result" => [
                 %{
                   "expirationDates" => expiration_dates
-                } = result
+                }
               ]
             }
           } ->
@@ -127,7 +164,8 @@ defmodule Quickstart.Yahoo do
               fn date ->
                 get_options_for_date(symbol, date, strike_prices)
               end,
-              []
+              max_concurrency: 8,
+              timeout: 60_000
             )
             |> Enum.reduce(%{calls: [], puts: []}, fn {:ok, result}, map ->
               map
@@ -151,7 +189,6 @@ defmodule Quickstart.Yahoo do
 
     case {@use_cache, :ets.lookup(@ets_cache_table, cache_key)} do
       {true, [{_key, val}]} ->
-        # Logger.info("Returning cached options for: #{symbol} on #{date}")
         val
 
       _ ->

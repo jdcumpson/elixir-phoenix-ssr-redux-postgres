@@ -1,145 +1,83 @@
 import React from 'react'
 import {useSelector, useDispatch} from 'react-redux'
-import {useTheme, makeStyles} from '@material-ui/core/styles'
+import {makeStyles} from '@material-ui/core/styles'
 import Paper from '@material-ui/core/Paper'
-import Chip from '@material-ui/core/Chip'
-import TextField from '@material-ui/core/TextField'
-import Button from '@material-ui/core/Button'
-import Autocomplete from '@material-ui/lab/Autocomplete'
-import FormControl from '@material-ui/core/FormControl'
-import MenuItem from '@material-ui/core/MenuItem'
-import InputLabel from '@material-ui/core/InputLabel'
-import Select from '@material-ui/core/Select'
 import Toolbar from '@material-ui/core/Toolbar'
 import Grid from '@material-ui/core/Grid'
-import InputAdornment from '@material-ui/core/InputAdornment'
-import Skeleton from '@material-ui/lab/Skeleton'
-import {VariableSizeList} from 'react-window'
-import matchSorter from 'match-sorter'
-import moment from 'moment'
-import cx from 'classnames'
 import _ from 'lodash'
+import Skeleton from '@material-ui/lab/Skeleton'
+import Accordion from '@material-ui/core/Accordion'
+import AccordionDetails from '@material-ui/core/AccordionDetails'
+import AccordionSummary from '@material-ui/core/AccordionSummary'
+import Typography from '@material-ui/core/Typography'
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+import {LineChart, PieChart} from 'react-chartkick'
+import 'chart.js'
+import moment from 'moment'
 
-import {ListboxComponent} from './options'
+import Predictions from 'domains/options/predictions'
+import CustomPrice from 'domains/options/custom-price'
+import DateSelector from 'domains/options/date-selector'
+import OptionSelector from 'domains/options/option-selector'
+import OptionType from 'domains/options/option-type'
+import SymbolSelector from 'domains/options/symbol-selector'
+import PriceSlider from 'domains/options/price-slider'
+import MinMaxPrice from 'domains/options/min-max-price'
+
 import {
   fetchAllCompanies,
   fetchOptions,
   fetchPredictions,
 } from 'domains/options/actions'
-import {navigateTo} from 'domains/page/actions'
+import {updateOptionQuery} from 'domains/options/actions'
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    margin: theme.spacing(4),
-  },
-  option: {
-    marginBottom: theme.spacing(2),
-  },
-  formControl: {
-    marginTop: theme.spacing(2),
-    display: 'block',
-  },
-  chip: {
-    marginRight: theme.spacing(1),
-    minWidth: 64,
-  },
-  cell: {
-    height: 50,
-    padding: theme.spacing(2),
-    textAlign: 'center',
-  },
-  cellMonth: {
-    '&:nth-child(even)': {
-      background: '#f3f3f3',
+    [theme.breakpoints.up('md')]: {
+      margin: theme.spacing(4),
     },
-  },
-  tableRoot: {
-    padding: theme.spacing(1),
   },
   toolbar: {
     flexGrow: 1,
-    padding: theme.spacing(2),
   },
   secondHalf: {
     marginTop: theme.spacing(2),
   },
+  paper: {
+    paddingTop: theme.spacing(4),
+    paddingBottom: theme.spacing(2),
+  },
+  paperWrapper: {
+    padding: theme.spacing(1),
+  },
+  accordion: {
+    paddingTop: theme.spacing(2),
+  },
+  optionInfo: {
+    marginTop: theme.spacing(2),
+  },
 }))
-
-const deepGreen = [0, 204, 0]
-const lightGreen = [160, 255, 160]
-const lightRed = [255, 160, 160]
-const deepRed = [243, 28, 28]
-
-const convolve = ([red1, green1, blue1], [red2, green2, blue2], percent) => {
-  const red = red1 + percent * (red2 - red1)
-  const green = green1 + percent * (green2 - green1)
-  const blue = blue1 + percent * (blue2 - blue1)
-  return [red, green, blue]
-}
-
-const rgbify = ([red, green, blue]) => `rgb(${red}, ${green}, ${blue})`
-
-const optionToRgb = (option, maxRisk) => {
-  if (option.profit == 0) {
-    return null
-  }
-
-  const color1 = option.profit > 0 ? deepGreen : lightRed
-  const color2 = option.profit > 0 ? lightGreen : deepRed
-
-  let percent = 0
-  if (option.profit > 0) {
-    percent = 1 - option.profit / maxRisk
-  } else {
-    // percent = 1 - -1 * (option.cost / option.profit)
-    percent = option.profit / -maxRisk
-  }
-
-  return rgbify(convolve(color1, color2, percent))
-}
 
 export default function Option(props) {
   const styles = useStyles()
   const dispatch = useDispatch()
-  const symbol = useSelector((state) => state.page.params.symbol)
-  const date = useSelector((state) => state.page.params.date)
-  const priceAndType = useSelector((state) => state.page.params.priceAndType)
+  const {option} = useSelector((state) => state.options.option)
+  const options = useSelector((state) => state.options.options.currentSelection)
   const optionsBySymbol = useSelector((state) => state.options.options.bySymbol)
-  const strikePrice = parseFloat(priceAndType)
-  const type =
-    priceAndType && (priceAndType.endsWith('p') || priceAndType.endsWith('put'))
-      ? 'puts'
-      : 'calls'
-  const companies = useSelector((state) => state.options.companies.data)
-  const expirations =
-    type === 'calls'
-      ? _.get(optionsBySymbol, [symbol, 'callExpirations'], [])
-      : _.get(optionsBySymbol, [symbol, 'putExpirations'], [])
-  const companyData = _.get(optionsBySymbol, [symbol, 'data'], {})
-  const option =
-    _.chain(optionsBySymbol)
-      .get([symbol, type], [])
-      .find(
-        (option) => option.strikePrice == strikePrice && option.expiry == date,
-      )
-      .value() || null
-  const options =
-    _.chain(optionsBySymbol)
-      .get([symbol, type], [])
-      .filter((option) => {
-        return option.expiry == date
-      })
-      .value() || []
-  const predictions = useSelector((state) => state.options.options.predictions)
-  const customPriceText = useSelector((state) => state.page.params.customPrice)
-  const _cp = parseFloat(customPriceText)
-  const customPrice = _.isFinite(_cp) ? _cp : undefined
+  const fetching = useSelector((state) => state.options.option.fetching)
+  const {
+    symbol,
+    date,
+    type,
+    customPrice,
+    maxStrikePrice,
+    minStrikePrice,
+  } = useSelector((state) => state.options.option.args)
+  const companyData = useSelector(
+    (state) => state.options.companies.currentSelection,
+  )
 
-  const filterOptions = (companies, {inputValue}) => {
-    return matchSorter(companies, inputValue, {
-      keys: ['symbol'],
-    })
-  }
+  const optionStrikePrice = _.get(option, ['strikePrice'], undefined)
 
   React.useEffect(() => {
     dispatch(fetchAllCompanies())
@@ -154,9 +92,10 @@ export default function Option(props) {
       _.get(optionsBySymbol, [symbol, 'receivedAt']) &&
       !option &&
       date &&
-      options.length == 0
+      options.length == 0 &&
+      symbol
     ) {
-      dispatch(navigateTo(`/${symbol}/`))
+      dispatch(updateOptionQuery({symbol}))
     }
   }, [optionsBySymbol, symbol, option, date, options])
 
@@ -168,293 +107,117 @@ export default function Option(props) {
       fetchPredictions(
         symbol,
         date,
-        option.strikePrice,
-        36,
-        44,
+        optionStrikePrice || undefined,
+        minStrikePrice || undefined,
+        maxStrikePrice || undefined,
         customPrice,
         undefined,
         type,
       ),
     )
-  }, [symbol, date, option, customPrice])
-
-  const priceChange = (price) => {
-    const params = price
-      ? {
-          queryParams: {
-            customPrice: price,
-          },
-        }
-      : {queryParams: {}, keepQueryParams: false}
-    dispatch(
-      navigateTo(
-        `/${symbol}/${date}/${option.strikePrice}${
-          type == 'calls' ? 'c' : 'p'
-        }`,
-        params,
-      ),
-    )
-  }
+  }, [
+    symbol,
+    date,
+    optionStrikePrice,
+    type,
+    customPrice,
+    minStrikePrice,
+    maxStrikePrice,
+  ])
 
   return (
     <div className={styles.root}>
-      <Paper>
-        <Toolbar>
-          <div className={styles.toolbar}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
-                <Autocomplete
-                  id="symbol-selector"
-                  filterOptions={filterOptions}
-                  selectOnFocus
-                  disableListWrap
-                  options={companies}
-                  classes={{
-                    root: styles.option,
-                  }}
-                  ListboxComponent={ListboxComponent}
-                  onChange={(event, company) => {
-                    if (!company) {
-                      return
-                    }
-                    dispatch(navigateTo(`/${company.symbol}/${date}`))
-                  }}
-                  value={
-                    _.find(
-                      companies,
-                      (company) =>
-                        company.symbol.toUpperCase() === symbol.toUpperCase(),
-                    ) || {symbol: symbol, name: ''}
-                  }
-                  getOptionSelected={(option, value) => {
-                    return _.isEqual(option, value)
-                  }}
-                  autoHighlight
-                  getOptionLabel={(company) => `${company.name}`}
-                  renderOption={(option) => (
-                    <React.Fragment>
-                      <Chip
-                        classes={{root: styles.chip}}
-                        color="primary"
-                        label={option.symbol}
-                      />{' '}
-                      {option.name}
-                    </React.Fragment>
+      <div className={styles.paperWrapper}>
+        <Paper classes={{root: styles.paper}}>
+          <Toolbar>
+            <div className={styles.toolbar}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <SymbolSelector />
+                  <DateSelector />
+                  <OptionSelector />
+                  <OptionType />
+                  {option && option.price && (
+                    <div className={styles.optionInfo}>
+                      {!fetching ? (
+                        <>
+                          <Typography>
+                            Option premium ${option && option.price}
+                          </Typography>
+                          <Typography>
+                            Implied volatility{' '}
+                            {_.get(option, 'impliedVolatility')}
+                          </Typography>
+                        </>
+                      ) : (
+                        <>
+                          <Skeleton variant="text" />
+                          <Skeleton variant="text" />
+                        </>
+                      )}
+                    </div>
                   )}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Choose company"
-                      variant="outlined"
-                      InputProps={{
-                        ...params.InputProps,
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Chip
-                              classes={{root: styles.chip}}
-                              color="primary"
-                              label={symbol}
-                            />
-                          </InputAdornment>
-                        ),
-                      }}
-                      inputProps={{
-                        ...params.inputProps,
-                        autoComplete: 'new-password', // disable autocomplete and autofill
-                      }}
-                    />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  {companyData && companyData.strikePrice && (
+                    <>
+                      {!fetching ? (
+                        <>
+                          <Typography gutterBottom variant="h6">
+                            {companyData.symbol} - ${companyData.strikePrice}
+                          </Typography>
+                        </>
+                      ) : (
+                        <>
+                          <Skeleton height={32} variant="text" />
+                        </>
+                      )}
+                    </>
                   )}
-                />
-                <Autocomplete
-                  id="date-selector"
-                  selectOnFocus
-                  options={expirations}
-                  classes={{
-                    root: styles.option,
-                  }}
-                  onChange={(event, option) => {
-                    if (!option) {
-                      return
-                    }
-                    dispatch(navigateTo(`/${symbol}/${option.value}`))
-                  }}
-                  getOptionSelected={(option, value) => {
-                    return _.isEqual(option, value)
-                  }}
-                  value={date ? {value: date, label: date} : null}
-                  autoHighlight
-                  getOptionLabel={(option) => (option ? option.label : '')}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Choose expiration"
-                      variant="outlined"
-                      inputProps={{
-                        ...params.inputProps,
-                        autoComplete: 'new-password', // disable autocomplete and autofill
-                      }}
-                    />
+                  {companyData && companyData.tochlv && (
+                    <>
+                      <LineChart
+                        data={companyData.tochlv.map((x) => [
+                          moment(x.t * 1000).toDate(),
+                          x.h,
+                        ])}
+                        curve
+                        min={Math.min(...companyData.tochlv.map((x) => x.h))}
+                        max={Math.max(...companyData.tochlv.map((x) => x.h))}
+                      />
+                    </>
                   )}
-                />
-                <Autocomplete
-                  options={options}
-                  classes={{
-                    root: styles.option,
-                  }}
-                  selectOnFocus
-                  onChange={(event, option) => {
-                    if (!option) {
-                      return
-                    }
-                    dispatch(
-                      navigateTo(
-                        `/${symbol}/${date}/${option.strikePrice}${
-                          type == 'calls' ? 'c' : 'p'
-                        }`,
-                      ),
-                    )
-                  }}
-                  getOptionSelected={(option, value) => {
-                    return _.isEqual(option, value)
-                  }}
-                  value={option}
-                  autoHighlight
-                  getOptionLabel={(option) =>
-                    option ? `${option.strikePrice.toFixed(2)}` : ''
-                  }
-                  renderOption={(option) => (
-                    <React.Fragment>
-                      {option.strikePrice.toFixed(2)}
-                    </React.Fragment>
-                  )}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Choose option"
-                      variant="outlined"
-                      InputProps={{
-                        ...params.InputProps,
-                        startAdornment: (
-                          <InputAdornment position="start">$</InputAdornment>
-                        ),
-                      }}
-                      inputProps={{
-                        ...params.inputProps,
-                        autoComplete: 'new-password', // disable autocomplete and autofill
-                      }}
-                    />
-                  )}
-                />
-                <FormControl className={styles.formControl} variant="outlined">
-                  <InputLabel>Option type</InputLabel>
-                  <Select
-                    label="Option type"
-                    value={type}
-                    fullWidth
-                    onChange={(event) => {
-                      dispatch(
-                        navigateTo(
-                          `/${symbol}/${date}/${option.strikePrice}${
-                            event.target.value == 'calls' ? 'c' : 'p'
-                          }`,
-                        ),
-                      )
-                    }}
-                  >
-                    <MenuItem value="calls">Call</MenuItem>
-                    <MenuItem value="puts">Put</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <FormControl className={styles.formControl} variant="outlined">
-                  <TextField
-                    label="Custom option premium"
-                    variant="outlined"
-                    value={_.isFinite(customPrice) ? customPriceText : ''}
-                    fullWidth
-                    onChange={(event) => priceChange(event.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">$</InputAdornment>
-                      ),
-                    }}
-                    inputProps={{
-                      autoComplete: 'new-password', // disable autocomplete and autofill
-                    }}
-                  />
-                </FormControl>
+                </Grid>
               </Grid>
-              <Grid item xs={12} md={8}>
-                <div>strike price: {companyData.strikePrice}</div>
-                <div>option price: {option && option.price}</div>
-                <div>
-                  implied volatility: {_.get(option, 'impliedVolatility')}
-                </div>
+            </div>
+          </Toolbar>
+        </Paper>
+      </div>
+      <div className={styles.paperWrapper}>
+        <Accordion>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="panel1bh-content"
+            id="panel1bh-header"
+          >
+            <Typography className={styles.heading}>Advanced</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container>
+              <Grid item xs={12} md={6}>
+                <MinMaxPrice />
+              </Grid>
+              <Grid item xs={12}></Grid>
+              <Grid item xs={12} md={6}>
+                <CustomPrice />
               </Grid>
             </Grid>
-          </div>
-        </Toolbar>
-      </Paper>
-      {option && predictions.data && predictions.data.length > 0 && (
-        <Paper classes={{root: styles.secondHalf}}>
-          <table className={styles.tableRoot}>
-            <thead>
-              <tr>
-                <th className={cx(styles.cell, styles.cellMonth)}></th>
-                {_.chain(predictions.data[0])
-                  .groupBy((prediction) =>
-                    moment(prediction.date).format('YYYY-MMM'),
-                  )
-                  .toPairs()
-                  .map(([date, predictions]) => (
-                    <th
-                      key={date}
-                      className={cx(styles.cell, styles.cellMonth)}
-                      colSpan={predictions.length}
-                    >
-                      <div>{moment(date).format('MMM')}</div>
-                    </th>
-                  ))
-                  .value()}
-              </tr>
-              <tr>
-                <th className={styles.cell}></th>
-                {predictions.data[0].map((prediction) => (
-                  <th key={prediction.date} className={styles.cell}>
-                    <div>{moment(prediction.date).format('D')}</div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {predictions.data.map((row, n) => (
-                <tr key={n}>
-                  <th className={styles.cell}>
-                    {row[0].strikePrice.toFixed(2)}
-                  </th>
-                  {row.map((prediction) => (
-                    <td
-                      className={styles.cell}
-                      style={{
-                        backgroundColor: optionToRgb(
-                          prediction,
-                          prediction.profit > 0
-                            ? predictions.maxProfit
-                            : option.price * 100,
-                        ),
-                      }}
-                      key={`${prediction.price}${prediction.date}`}
-                      onClick={() => console.info(prediction)}
-                    >
-                      {prediction.profit.toFixed(2)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Paper>
-      )}
+          </AccordionDetails>
+        </Accordion>
+      </div>
+      <div className={styles.secondHalf}>
+        <Predictions />
+      </div>
     </div>
   )
 }

@@ -24,7 +24,14 @@ defmodule Quickstart.Investments do
     PersistentEts.new(
       @ets_cache_table,
       fp,
-      [:named_table, :set, :public, persist_every: 30_000]
+      [
+        :named_table,
+        :set,
+        :public,
+        persist_every: 30_000,
+        read_concurrency: true,
+        write_concurrency: false
+      ]
     )
 
     Logger.info("#{:ets.tab2list(@ets_cache_table) |> length()} predictions are cached")
@@ -142,7 +149,6 @@ defmodule Quickstart.Investments do
 
     case :ets.lookup(@ets_cache_table, cache_key) do
       [{_key, val}] ->
-        # Logger.info("Returning cached values for #{cache_key}")
         val
 
       _ ->

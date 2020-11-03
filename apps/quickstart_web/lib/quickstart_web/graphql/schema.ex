@@ -76,10 +76,20 @@ defmodule QuickstartWeb.GraphQL.Schema do
     field(:name, :string)
   end
 
+  object :tochlv do
+    field(:t, :integer)
+    field(:o, :float)
+    field(:c, :float)
+    field(:h, :float)
+    field(:l, :float)
+    field(:v, :integer)
+  end
+
   object :company_details do
     field(:symbol, :string)
     field(:name, :string)
     field(:strike_price, :float)
+    field(:tochlv, list_of(:tochlv))
 
     field :calls, list_of(:option) do
       arg(:expirations, list_of(:date))
@@ -151,30 +161,5 @@ defmodule QuickstartWeb.GraphQL.Schema do
         end)
       )
     end
-
-    # field :expected_prices, :predictions do
-    #   arg(:option, :string)
-    #   arg(:expiry, non_null(:date))
-    #   arg(:date, non_null(:date))
-    #   arg(:strike_price, :float)
-    #   arg(:implied_volatility, :float)
-    #   arg(:current_price_per_option, :float)
-    #   arg(:max_strike_price, :float)
-    #   arg(:min_strike_price, :float)
-    #   arg(:number_of_contracts, :float)
-    #   resolve(handle_errors(&Resolvers.Option.predict_option_prices/3))
-    # end
   end
-
-  # mutation do
-  # field :sign_up, :sign_up_response do
-  #   arg :email, non_null(:string)
-  #   arg :first_name, non_null(:string)
-  #   arg :last_name, non_null(:string)
-  #   arg :nickname, :string
-  #   arg :password, non_null(:string)
-  #   arg :subdomain, non_null(:string)
-  #   resolve handle_errors(&User.sign_up/3)
-  # end
-  # end
 end

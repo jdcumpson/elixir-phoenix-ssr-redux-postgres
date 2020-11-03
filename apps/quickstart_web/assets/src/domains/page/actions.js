@@ -3,8 +3,6 @@ import {getRoute} from 'lib/route'
 import history from 'lib/history'
 import Url from 'url-parse'
 
-export const NAVIGATE_PAGE = 'page/navigatePage'
-
 export const navigateTo = (
   url,
   {
@@ -67,8 +65,9 @@ export const navigatePage = ({action, location}) => {
     // TODO: gtag integration!
 
     dispatch({
+      routeName: route.name,
       routerPath: route.path,
-      type: NAVIGATE_PAGE,
+      type: 'page/navigatePage',
       path: location.pathname,
       routeConfig: route.args,
       params: {
@@ -78,8 +77,8 @@ export const navigatePage = ({action, location}) => {
       action,
     })
 
-    dispatch({
-      type: 'popups/openSnack',
-    })
+    // dispatch({
+    //   type: 'popups/openSnack',
+    // })
   }
 }

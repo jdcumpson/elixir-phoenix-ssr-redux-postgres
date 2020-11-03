@@ -1,5 +1,3 @@
-import {NAVIGATE_PAGE} from 'domains/page/actions'
-
 const DEFAULT_PAGE_STATE = {
   path: '',
   params: {},
@@ -8,7 +6,7 @@ const DEFAULT_PAGE_STATE = {
 
 export default (state = DEFAULT_PAGE_STATE, action) => {
   switch (action.type) {
-    case NAVIGATE_PAGE: {
+    case 'page/navigatePage': {
       return {
         ...state,
         ...action,
