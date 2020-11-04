@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {Suspense} from 'react'
 import {useSelector, useDispatch} from 'react-redux'
 import {makeStyles} from '@material-ui/core/styles'
 import Paper from '@material-ui/core/Paper'
@@ -11,9 +11,6 @@ import AccordionDetails from '@material-ui/core/AccordionDetails'
 import AccordionSummary from '@material-ui/core/AccordionSummary'
 import Typography from '@material-ui/core/Typography'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
-import {LineChart, PieChart} from 'react-chartkick'
-import 'chart.js'
-import moment from 'moment'
 
 import Predictions from 'domains/options/predictions'
 import CustomPrice from 'domains/options/custom-price'
@@ -21,7 +18,6 @@ import DateSelector from 'domains/options/date-selector'
 import OptionSelector from 'domains/options/option-selector'
 import OptionType from 'domains/options/option-type'
 import SymbolSelector from 'domains/options/symbol-selector'
-import PriceSlider from 'domains/options/price-slider'
 import MinMaxPrice from 'domains/options/min-max-price'
 
 import {
@@ -57,6 +53,10 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(2),
   },
 }))
+
+const Chart = React.lazy(() =>
+  import(/* webpackPreload: true */ '../components/line-chart'),
+)
 
 export default function Option(props) {
   const styles = useStyles()
@@ -176,15 +176,17 @@ export default function Option(props) {
                   )}
                   {companyData && companyData.tochlv && (
                     <>
-                      <LineChart
-                        data={companyData.tochlv.map((x) => [
-                          moment(x.t * 1000).toDate(),
-                          x.h,
-                        ])}
-                        curve
-                        min={Math.min(...companyData.tochlv.map((x) => x.h))}
-                        max={Math.max(...companyData.tochlv.map((x) => x.h))}
-                      />
+                      <Suspense fallback={null}>
+                        <Chart
+                          data={companyData.tochlv.map((x) => [
+                            new Date(x.t * 1000),
+                            x.h,
+                          ])}
+                          curve
+                          min={Math.min(...companyData.tochlv.map((x) => x.h))}
+                          max={Math.max(...companyData.tochlv.map((x) => x.h))}
+                        />
+                      </Suspense>
                     </>
                   )}
                 </Grid>

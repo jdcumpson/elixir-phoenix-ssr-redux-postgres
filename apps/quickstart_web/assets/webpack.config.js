@@ -9,7 +9,9 @@ const webpack = require('webpack')
 const env = process.env.RELEASE_ENV || 'dev'
 
 // add react-refresh
-babelConfig.plugins.push('react-refresh/babel')
+if (env === 'dev') {
+  babelConfig.plugins.push('react-refresh/babel')
+}
 
 const config = {
   // allow resolution of imports without relative paths

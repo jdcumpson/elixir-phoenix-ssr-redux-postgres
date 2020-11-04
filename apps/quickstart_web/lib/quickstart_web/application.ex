@@ -15,6 +15,13 @@ defmodule QuickstartWeb.Application do
       # {QuickstartWeb.Worker, arg}
     ]
 
+    children =
+      if Application.get_env(:quickstart_web, :manifest_cache) do
+        children ++ [Application.get_env(:quickstart_web, :manifest_cache)]
+      else
+        children
+      end
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: QuickstartWeb.Supervisor]

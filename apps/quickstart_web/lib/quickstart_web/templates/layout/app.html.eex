@@ -5,13 +5,25 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Quickstart · Phoenix Framework</title>
-    <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/hmr/app.css") %>"/>
+    <%= if Mix.env == :dev do %>
+      <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/hmr/app.css") %>"/>
+    <% else %>
+      <%= for path <- assets(["app", "vendors", "runtime"], ".css") do %>
+        <link rel="stylesheet" href="<%= Routes.static_path(@conn, path) %>"/>
+      <% end %>
+    <% end %>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
 
 
   </head>
   <body>
     <div id="root"></div>
-    <script defer type="text/javascript" src="<%= Routes.static_path(@conn, "/hmr/app.dev.js") %>"></script>
+    <%= if Mix.env == :dev do %>
+      <script defer type="text/javascript" src="<%= Routes.static_path(@conn, "/hmr/app.dev.js") %>"></script>
+    <% else %>
+    <%= for path <- assets(["vendors", "runtime", "app"], ".js") do %>
+        <script defer type="text/javascript" src="<%= Routes.static_path(@conn, path) %>"></script>
+      <% end %>
+    <% end %>
   </body>
 </html>

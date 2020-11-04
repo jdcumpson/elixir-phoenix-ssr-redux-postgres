@@ -16,3 +16,4 @@ dist/
 *.txt
 *.tab
 /node_modules
+*.DS_Store

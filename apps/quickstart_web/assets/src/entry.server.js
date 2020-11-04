@@ -1,3 +1,7 @@
+import 'core-js/stable'
+import 'regenerator-runtime/runtime'
+import 'whatwg-fetch'
+
 import http from 'http'
 import fs from 'fs'
 // import {Context as ResponsiveContext} from 'react-responsive'

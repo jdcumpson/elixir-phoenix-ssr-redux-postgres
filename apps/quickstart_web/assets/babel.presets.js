@@ -14,7 +14,11 @@ module.exports = {
       ],
       ['@babel/preset-react', {development: false}],
     ],
-    plugins: ['transform-class-properties', '@babel/plugin-transform-runtime'],
+    plugins: [
+      'transform-class-properties',
+      '@babel/plugin-transform-runtime',
+      // 'lodash',
+    ],
   },
   CSS_SCOPE_NAME,
 }

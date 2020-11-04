@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {Suspense} from 'react'
 import {useSelector} from 'react-redux'
 import withStyles from 'isomorphic-style-loader/withStyles'
 import styles from 'gestalt/dist/gestalt.css'
@@ -30,7 +30,9 @@ function Application(props) {
     <React.Fragment>
       {/* CssBaseline standardizes the CSS rules - similar to many modern css libraries */}
       <CssBaseline />
-      <Node page={page} {..._.get(route, 'args.nodeProps', {})} />
+      <Suspense fallback={null}>
+        <Node page={page} {..._.get(route, 'args.nodeProps', {})} />
+      </Suspense>
     </React.Fragment>
   )
 }

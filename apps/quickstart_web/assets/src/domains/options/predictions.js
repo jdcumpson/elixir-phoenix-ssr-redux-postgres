@@ -1,9 +1,9 @@
 import React from 'react'
 import cx from 'classnames'
-import {useSelector, useDispatch} from 'react-redux'
-import moment from 'moment'
+import {useSelector} from 'react-redux'
 import {makeStyles} from '@material-ui/core/styles'
 import Paper from '@material-ui/core/Paper'
+import {format, parse} from 'date-fns'
 
 const deepGreen = [0, 204, 0]
 const lightGreen = [160, 255, 160]
@@ -85,9 +85,12 @@ export default function Predictions(props) {
             <tr>
               <th className={cx(styles.cell, styles.cellMonth)}></th>
               {_.chain(predictions.data[0])
-                .groupBy((prediction) =>
-                  moment(prediction.date).format('YYYY-MMM'),
-                )
+                .groupBy((prediction) => {
+                  return format(
+                    parse(prediction.date, 'yyyy-MM-dd', new Date()),
+                    'yyyy-MM',
+                  )
+                })
                 .toPairs()
                 .map(([date, predictions]) => (
                   <th
@@ -95,7 +98,9 @@ export default function Predictions(props) {
                     className={cx(styles.cell, styles.cellMonth)}
                     colSpan={predictions.length}
                   >
-                    <div>{moment(date).format('MMM')}</div>
+                    <div>
+                      {format(parse(date, 'yyyy-MM', new Date()), 'MMM')}
+                    </div>
                   </th>
                 ))
                 .value()}
@@ -104,7 +109,12 @@ export default function Predictions(props) {
               <th className={styles.cell}></th>
               {predictions.data[0].map((prediction) => (
                 <th key={prediction.date} className={styles.cell}>
-                  <div>{moment(prediction.date).format('D')}</div>
+                  <div>
+                    {format(
+                      parse(prediction.date, 'yyyy-MM-dd', new Date()),
+                      'd',
+                    )}
+                  </div>
                 </th>
               ))}
             </tr>
