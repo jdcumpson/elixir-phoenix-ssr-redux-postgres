@@ -205,12 +205,11 @@ export default function Option(props) {
             <Typography className={styles.heading}>Advanced</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Grid container>
-              <Grid item xs={12} md={6}>
+            <Grid container justify="flex-start" direction="column">
+              <Grid item xs={12} md={2}>
                 <MinMaxPrice />
               </Grid>
-              <Grid item xs={12}></Grid>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} md={4}>
                 <CustomPrice />
               </Grid>
             </Grid>

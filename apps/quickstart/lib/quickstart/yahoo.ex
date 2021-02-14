@@ -42,7 +42,7 @@ defmodule Quickstart.Yahoo do
     ask = Map.get(yahoo_option, "ask")
     last = Map.get(yahoo_option, "lastPrice")
     # iv = Map.get(yahoo_option, "impliedVolatility", 0)
-    price = if ask > 0, do: ask, else: last
+    price = if not is_nil(ask) and ask > 0, do: ask, else: last
     expiry = expiry |> DateTime.from_unix!() |> DateTime.to_date()
     t = max(Date.diff(expiry, Date.utc_today()), 1)
     strike = max(1, strike)
@@ -74,17 +74,19 @@ defmodule Quickstart.Yahoo do
     Map.merge(option, Map.take(computed_option, [:delta, :theta, :gamma]))
   end
 
-  def get_info(symbol) do
+  def get_info(symbol, use_cache \\ true) do
     cache_key = "#{symbol}-info-#{date_15m()}"
     url = "#{@base_url}/v8/finance/chart/#{symbol}?interval=1d&range=6mo"
 
-    case {@use_cache, :ets.lookup(@ets_cache_table, cache_key)} do
+    case {use_cache and @use_cache, :ets.lookup(@ets_cache_table, cache_key)} do
       {true, [{_key, val}]} ->
         val
 
       _ ->
         case HTTPoison.get!(url) do
           %HTTPoison.Response{status_code: _, body: body} ->
+            IO.inspect(body, printable_limit: :infinity)
+
             case Poison.decode!(body) do
               %{
                 "chart" => %{

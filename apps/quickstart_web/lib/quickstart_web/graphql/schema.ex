@@ -130,6 +130,7 @@ defmodule QuickstartWeb.GraphQL.Schema do
     field(:gamma, :float)
     field(:delta, :float)
     field(:theta, :float)
+    field(:number_of_contracts, :float)
   end
 
   object :predictions do

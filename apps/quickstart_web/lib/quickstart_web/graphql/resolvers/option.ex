@@ -114,7 +114,9 @@ defmodule QuickstartWeb.GraphQL.Resolvers.Option do
       Enum.map(prices, fn future_strike_price ->
         Enum.map(times, fn date ->
           t = max(Date.diff(expiry, date), 1)
-          result = black_scholes(future_strike_price, strike_price, t / 365, sigma, 0, 0)
+
+          result = black_scholes(future_strike_price, strike_price, t / 365, sigma, 1.05, 0)
+
           option = if type == "call", do: get_in(result, [:call]), else: get_in(result, [:put])
 
           profit =
@@ -132,6 +134,7 @@ defmodule QuickstartWeb.GraphQL.Resolvers.Option do
             date: date,
             expiry: expiry,
             profit: profit,
+            number_of_contracts: number_of_contracts,
             profit_per_contract: profit / number_of_contracts,
             cost: Float.round(current_price_per_option * 100 * number_of_contracts, 2),
             cost_per_contract: Float.round(current_price_per_option * 100, 2),

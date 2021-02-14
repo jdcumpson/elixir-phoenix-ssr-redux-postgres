@@ -145,17 +145,18 @@ defmodule Quickstart.Investments do
   q - dividend rate of the asset
   """
   def black_scholes(s, k, t, sigma, q, r, scale \\ 1.0) do
-    cache_key = "#{date_15m()}-#{s}-#{k}-#{t}-#{sigma}-#{q}-#{r}-#{scale}"
+    # cache_key = "#{date_15m()}-#{s}-#{k}-#{t}-#{sigma}-#{q}-#{r}-#{scale}"
 
-    case :ets.lookup(@ets_cache_table, cache_key) do
-      [{_key, val}] ->
-        val
+    # case :ets.lookup(@ets_cache_table, cache_key) do
+    # [{_key, val}] ->
+    #   val
 
-      _ ->
-        val = margrabes_short(s, k, t, sigma, q, r, scale)
-        :ets.insert(@ets_cache_table, {cache_key, val})
-        val
-    end
+    # _ ->
+    #   val = margrabes_short(s, k, t, sigma, q, r, scale)
+    #   :ets.insert(@ets_cache_table, {cache_key, val})
+    # val
+    # end
+    margrabes_short(s, k, t, sigma, q, r, scale)
   end
 
   def implied_volatility(
@@ -196,17 +197,17 @@ defmodule Quickstart.Investments do
         _ -> raise "invalid option type"
       end
 
-    # IO.puts("--------")
-    # IO.puts("iteration: #{iteration}")
-    # IO.puts("high: #{high}")
-    # IO.puts("low: #{low}")
-    # IO.puts("option_high: #{option_high.price}")
-    # IO.puts("option_low: #{option_low.price}")
-    # IO.puts("option_mid: #{option_mid.price}")
-    # IO.puts("premium: #{premium}")
-    # IO.puts("high - premium: #{option_high.price - premium}")
-    # IO.puts("premium - low: #{premium - option_low.price}")
-    # IO.puts("diff_sigma: #{diff_sigma}")
+    if is_nil(premium) do
+      IO.puts("--------")
+      IO.puts("iteration: #{iteration}")
+      IO.puts("high: #{high}")
+      IO.puts("low: #{low}")
+      IO.puts("option_high: #{option_high.price}")
+      IO.puts("option_low: #{option_low.price}")
+      IO.puts("option_mid: #{option_mid.price}")
+      IO.puts("premium: #{premium}")
+      IO.puts("diff_sigma: #{diff_sigma}")
+    end
 
     cond do
       iteration > 5 ->
