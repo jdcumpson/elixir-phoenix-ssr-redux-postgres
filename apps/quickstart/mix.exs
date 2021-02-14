@@ -23,7 +23,7 @@ defmodule Quickstart.MixProject do
   def application do
     [
       mod: {Quickstart.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :ftp, :inets]
     ]
   end
 
@@ -42,7 +42,8 @@ defmodule Quickstart.MixProject do
       {:jason, "~> 1.0"},
       {:csv, "~> 2.3"},
       {:httpoison, "~> 1.2", override: true},
-      {:persistent_ets, "~> 0.2"}
+      {:persistent_ets, "~> 0.2"},
+      {:poison, "~> 2.1.0"}
     ]
   end
 
