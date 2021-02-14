@@ -1,0 +1,2 @@
+alias run_rsync='rsync -avz --exclude node_modules --exclude config/prod.secret.exs --exclude "*.tab" --exclude *.lock --exclude *.tab --exclude .git --exclude .elixir_ls --exclude deps --exclude _build --exclude apps/quickstart_web/priv ./ ubuntu@qs:/home/ubuntu/elixir-phoenix-ssr-redux-postgres'
+run_rsync; fswatch -o . | while read f; do run_rsync; done
