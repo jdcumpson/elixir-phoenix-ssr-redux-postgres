@@ -25,7 +25,7 @@ defmodule QuickstartWeb.Manifest do
     # in production the files need to be deployed behind nginx already
     # TODO: use a hash named folder to allow seemless front-end updates
     # such that the files aren't deleted when a new version is deployed
-    url = "#{protocol}://#{host}:#{port}#{path}#{app_name}/web/manifest.json"
+    url = "#{protocol}://#{host}:#{port}#{path}/#{app_name}/web/manifest.json"
 
     case HTTPoison.get(url, [], hackney: [insecure: true]) do
       {:ok, %HTTPoison.Response{body: body, status_code: 200}} ->
