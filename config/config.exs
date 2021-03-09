@@ -42,7 +42,7 @@ config :quickstart_web, QuickstartWeb.Endpoint,
   pubsub_server: Quickstart.PubSub,
   live_view: [signing_salt: "ynJMcOJm"],
   ssr_on: ssr_on,
-  ssr_node_server: [host: "localhost", port: 9005],
+  ssr_node_server: [host: "localhost", port: 9905],
   app_names: [:auth, :marketing, :plugin]
 
 # Configures Elixir's Logger

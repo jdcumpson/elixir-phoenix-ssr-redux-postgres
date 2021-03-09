@@ -108,4 +108,4 @@ Start the back-end server
 
 Start developing
 
-- open quickstart.dev:9000
+- open quickstart.dev:9900

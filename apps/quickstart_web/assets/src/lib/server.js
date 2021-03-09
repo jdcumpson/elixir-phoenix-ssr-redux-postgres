@@ -103,4 +103,4 @@ app.all('/', (req, res) => {
   res.json(renderString(req.url, appName, state, actions))
 })
 
-app.listen(9005, () => console.log('Server started http://localhost:9005'))
+app.listen(9905, () => console.log('Server started http://localhost:9905'))

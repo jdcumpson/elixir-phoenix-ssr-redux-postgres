@@ -16,9 +16,9 @@ config :quickstart, Quickstart.Repo,
 # watchers to your application. For example, we use it
 # with webpack to recompile .js and .css sources.
 config :quickstart_web, QuickstartWeb.Endpoint,
-  url: [host: "quickstart.dev", port: 9000, protocol: "https"],
-  static_url: [host: "quickstart.dev", port: 9000, path: "/assets/", protocol: "https"],
-  http: [port: 9004],
+  url: [host: "quickstart.dev", port: 9900, protocol: "https"],
+  static_url: [host: "quickstart.dev", port: 9900, path: "/assets/", protocol: "https"],
+  http: [port: 9904],
   debug_errors: true,
   code_reloader: true,
   check_origin: false,

@@ -88,10 +88,14 @@ defmodule QuickstartWeb.PageController do
     [_html, _scripts, _css, _styles, _links, _computed_state] = Jason.decode!(body)
   end
 
+  defp handle_response({:error, _}) do
+    raise "Unable to fetch rendered page response, did you start the node server? (yarn serve)"
+  end
+
   defp get_page_data(_conn, _path, subdomain) do
     app_name =
       case subdomain do
-        "producer" -> "auth"
+        "auth" -> "auth"
         _ -> "marketing"
       end
 
