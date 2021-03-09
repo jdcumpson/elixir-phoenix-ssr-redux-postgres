@@ -1,0 +1,1 @@
+$sudo certbot --server https://acme-v02.api.letsencrypt.org/directory -d quickstart.io -d *.quickstart.io --manual --preferred-challenges dns-01 certonly

@@ -1,0 +1,4 @@
+<div id="<%= assigns[:root_id] || "root" %>"></div>
+<%= for path <- asset_paths "plugin" do %>
+  <script defer type="text/javascript" src="<%= path %>"></script>
+<% end %>

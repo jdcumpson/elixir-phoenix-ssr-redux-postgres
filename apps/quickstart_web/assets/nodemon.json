@@ -1,0 +1,8 @@
+{
+  "ignore": ["dist"],
+  "execMap": {
+    "js": "babel-node"
+  },
+  "signal": "SIGHUP"
+}
+

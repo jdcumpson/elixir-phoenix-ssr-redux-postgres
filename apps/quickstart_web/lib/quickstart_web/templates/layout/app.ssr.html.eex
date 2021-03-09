@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Quickstart</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <style id="jss-server-side"><%= raw(@css)%></style>
+    <%=raw(@styles) %>
+    <%=raw(@links) %>
+  </head>
+  <body>
+    <%= if assigns[:ld_json] do %>
+      <script type="application/ld+json">
+        <%= raw(Jason.encode!(@ld_json)) %>
+      </script>
+    <% end %>
+    <script>
+      window.SSR_ENABLED = true
+    </script>
+    <% if assigns[:initial_state] do %>
+      <script>
+        window.__initialState = <%= raw(@initial_state) %>
+      </script>
+    <% end %>
+    <div id="root"><%= raw(@html)%></div>
+    <%= raw(@scripts) %>
+    <%= @inner_content %>
+  </body>
+</html>
