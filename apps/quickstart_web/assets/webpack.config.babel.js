@@ -37,14 +37,15 @@ const getConfig = (target, appName) => {
     )
   }
 
-  if (RELEASE_ENV !== 'prod') {
-    plugins.push(
-      new webpack.DllReferencePlugin({
-        context: path.join(__dirname),
-        manifest: require(path.join(__dirname, '/dist/dll/dll-manifest.json')), // eslint-disable-line
-      }),
-    )
-  }
+  // TODO: fixup dll optimization
+  // if (RELEASE_ENV !== 'prod') {
+  //   plugins.push(
+  //     new webpack.DllReferencePlugin({
+  //       context: path.join(__dirname),
+  //       manifest: require(path.join(__dirname, '/dist/dll/dll-manifest.json')), // eslint-disable-line
+  //     }),
+  //   )
+  // }
 
   if (target !== 'node' && RELEASE_ENV !== 'prod') {
     plugins.push(new webpack.HotModuleReplacementPlugin())
@@ -184,5 +185,5 @@ const getConfig = (target, appName) => {
 export default [
   getConfig('web', 'marketing'),
   getConfig('node', 'marketing'),
-  getConfig('web', 'auth'),
+  // getConfig('web', 'auth'), // turn this on to compile the auth application
 ]

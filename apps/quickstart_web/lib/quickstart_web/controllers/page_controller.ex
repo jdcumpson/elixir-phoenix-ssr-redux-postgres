@@ -32,9 +32,6 @@ defmodule QuickstartWeb.PageController do
       end)
 
     case {ssr_on, subdomain} do
-      {_, "plugin"} ->
-        render(conn, "internal.html", app_name: "plugin", entrypoint: "main", root_id: "plugin")
-
       {_, "app"} ->
         render(conn, "internal.html", app_name: "auth", entrypoint: "main")
 
@@ -59,6 +56,7 @@ defmodule QuickstartWeb.PageController do
             retry_unknown_errors: true
           )
           |> handle_response()
+          |> IO.inspect()
 
         # render(conn, "marketing.html", app_name: "marketing", entrypoint: "main")
 

@@ -6,7 +6,14 @@ export default function HomePage(props) {
   return (
     <div>
       <Typography>Marketing home page</Typography>
-      <Button href={'https://material-ui.com'}>Material UI</Button>
+      <Button
+        color="primary"
+        variant="contained"
+        target="_blank"
+        href={'https://material-ui.com'}
+      >
+        Material UI
+      </Button>
     </div>
   )
 }

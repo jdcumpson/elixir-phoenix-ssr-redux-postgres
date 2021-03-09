@@ -17,7 +17,7 @@ config :quickstart, Quickstart.Repo,
 # with webpack to recompile .js and .css sources.
 config :quickstart_web, QuickstartWeb.Endpoint,
   url: [host: "quickstart.dev", port: 9900, protocol: "https"],
-  static_url: [host: "quickstart.dev", port: 9900, path: "/assets/", protocol: "https"],
+  static_url: [host: "quickstart.dev", port: 9900, path: "/assets", protocol: "https"],
   http: [port: 9904],
   debug_errors: true,
   code_reloader: true,

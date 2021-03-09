@@ -36,14 +36,14 @@ ssr_on = if System.get_env("SSR_ENABLED") == "false", do: false, else: true
 # Configures the endpoint
 config :quickstart_web, QuickstartWeb.Endpoint,
   url: [host: "localhost"],
-  static_url: [host: "localhost", path: "/assets/"],
+  static_url: [host: "localhost", path: "/assets"],
   secret_key_base: "G75VpFHukbGY0e0bjnwpop27LdA5LXx4jETppzNzlGFPslk4zOak9KHQyyoz2FoG",
   render_errors: [view: QuickstartWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: Quickstart.PubSub,
   live_view: [signing_salt: "ynJMcOJm"],
   ssr_on: ssr_on,
   ssr_node_server: [host: "localhost", port: 9905],
-  app_names: [:auth, :marketing, :plugin]
+  app_names: [:auth, :marketing]
 
 # Configures Elixir's Logger
 config :logger, :console,

@@ -1,8 +1,9 @@
 import {combineReducers} from 'redux'
 import {reducer as responsiveReducer} from 'react-responsive-redux'
 
-const DEFAULT_STATE = {
+export const DEFAULT_STATE = {
   page: {path: '', params: {}, scrolling: false},
+  session: {user: null},
 }
 
 const basicReducer = (state = DEFAULT_STATE, action) => {

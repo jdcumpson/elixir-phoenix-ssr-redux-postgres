@@ -15,7 +15,7 @@ config :quickstart_web,
 
 config :quickstart_web, QuickstartWeb.Endpoint,
   url: [host: "quickstart.io", port: 443, protocol: "https"],
-  static_url: [host: "quickstart.io", port: 443, path: "/assets/", protocol: "https"],
+  static_url: [host: "quickstart.io", port: 443, path: "/assets", protocol: "https"],
   check_origin: [
     "https://quickstart.io",
     "https://app.quickstart.io"

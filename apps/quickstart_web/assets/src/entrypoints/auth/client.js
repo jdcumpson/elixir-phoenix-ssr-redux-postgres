@@ -11,7 +11,7 @@ import {StylesProvider, createGenerateClassName} from '@material-ui/core/styles'
 import history from 'lib/history'
 import Application from 'domains/application/application'
 import {navigatePage} from 'domains/application/actions'
-import reducer from 'domains/application/reducer'
+import reducer, {DEFAULT_STATE} from 'domains/application/reducer'
 
 import 'domains/auth/router'
 
@@ -30,9 +30,11 @@ const start = () => {
     reducer,
     {
       ...window.__initialState,
-      session: {
-        user: 'user',
-        turnCredential: 'foo',
+      app: {
+        ...DEFAULT_STATE,
+        session: {
+          user: 'user',
+        },
       },
     },
     compose(applyMiddleware.apply(null, middleware)),
