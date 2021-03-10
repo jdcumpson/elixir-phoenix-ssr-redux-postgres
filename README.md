@@ -109,3 +109,48 @@ Start the back-end server
 Start developing
 
 - open quickstart.dev:9900
+
+Production
+
+- `yarn build:prod` - currently builds reference local filesystem to overcome
+  this just I've done `mkdir -p /Users/jd/` && `ln -s /home/ubuntu /Users/jd/workspace`
+  that you can copy for your username on the remote machine - TODO: make this agnostic
+- `./sync.sh` - sync current app to a remote host (see `./sync.sh`)
+- `tmux new -s phx` or `tmux attach -t phx` - use tmux to prevent process culling
+- `PORT=9914 MIX_ENV=prod RELEASE_ENV=prod mix phx.server` - run phx server
+- `ctrl + b + d`
+- `tmux new -s yarn` or `tmux attach -t yarn`
+- `cd apps/stonk_options_web/assets`
+- `NODE_ENV=production RELEASE_ENV=prod yarn serve` - run yarn ssr server
+
+SSH
+
+For `./sync.sh` to work you need to name the host something your ssh config has,
+example:
+
+`ubuntu@qs:/home/ubuntu/quickstart`
+
+you should have a host defined as `qs` in `~/.ssh/config` like:
+
+```
+Host qs
+  User ubuntu
+  Hostname <YOUR EC2 (or other) host>
+  IdentityFile ~/.ssh/id_rsa
+  ServerAliveInterval 120
+  ServerAliveCountMax 30
+```
+
+DB (repo)
+
+The fastest thing is to configure an RDS instance, but generally
+you'll need to run
+
+```
+createuser --host=<DB HOST> --username=<root password> --pwprompt --password --createdb <DESIRED USERNAME>
+```
+
+then your `mix ecto.create` etc. commands will work.
+
+Remember to use `MIX_ENV=prod` and `RELEASE_ENV=prod` for elixir (for desired envs) and
+`NODE_ENV=production` and `RELEASE_ENV=prod` for node processes.
